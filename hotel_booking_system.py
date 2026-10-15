@@ -4,8 +4,6 @@ import ast
 import hashlib
 import os
 import secrets
-import random
-import math
 
 room_inventory = {
     "101": {"type": "Deluxe", "price": 150.0, "is_booked": False},
@@ -23,6 +21,10 @@ def book_room(room_num, guest_name, booking_log=None):
     room_inventory[room_num]["is_booked"] = True
     booking_log.append(f"Reserved room {room_num} for guest {guest_name}")
     return True
+
+
+# Backward-compatibility alias
+bookRoom = book_room
 
 
 def cancel_booking(room_num):
@@ -60,14 +62,19 @@ def compute_seasonal_rate(room_num, rate_expr):
         try:
             tree = ast.parse(rate_expr, mode="eval")
         except SyntaxError as err:
-            raise ValueError(f"Invalid rate expression syntax: {rate_expr}") from err
+            raise ValueError(
+                f"Invalid rate expression syntax: {rate_expr}"
+            ) from err
 
         for node in ast.walk(tree):
             if isinstance(node, (ast.Expression, ast.BinOp, ast.Load)):
                 continue
             if isinstance(node, (ast.Mult, ast.Add, ast.Sub)):
                 continue
-            if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+            if (
+                isinstance(node, ast.Constant)
+                and isinstance(node.value, (int, float))
+            ):
                 continue
             if isinstance(node, ast.Name) and node.id == "base_price":
                 continue
@@ -93,7 +100,9 @@ def compute_seasonal_rate(room_num, rate_expr):
 
         return round(float(_evaluate_node(tree)), 2)
 
-    raise TypeError("rate_expr must be a numeric multiplier or string expression")
+    raise TypeError(
+        "rate_expr must be a numeric multiplier or string expression"
+    )
 
 
 def generate_guest_hash(guest_id):
@@ -126,4 +135,5 @@ def main():
     print("Secret key configured:", "Yes" if secret_key else "No (default)")
 
 
-main()
+if __name__ == "__main__":
+    main()
